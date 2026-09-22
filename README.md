@@ -1,14 +1,14 @@
-# omt-console
+﻿# workbench
 
-[oh my teams](https://github.com/inho-team/oh-my-teams)(OMT)를 대화형 화면으로 다루는 데스크톱·모바일 앱입니다. 사용자는 채팅 창에서 이사(Director)와 대화하고, 앱은 Orca로 PM과 worker 터미널을 열어 메시지를 전달하며 kickoff가 멈추지 않게 감독합니다.
+[oh my teams](https://github.com/inho-team/oh-my-teams)(OMT)를 핵심 엔진으로 삼고 Orca CLI 의존성 없이 독립 동작하는 대화형 데스크톱·모바일 제품입니다. 사용자는 채팅 창에서 이사(Director)와 대화하며, 제품이 직접 헤드리스 프로세스로 PM과 worker 턴을 통제하여 멈추지 않고 킥오프를 완주합니다.
 
-> 상태: 설계 단계. 설계 문서는 `docs/` 아래에 작성하며, 설계 kickoff의 브리프는 [`docs/briefs/`](docs/briefs/)에 있습니다.
+> 상태: 계획 단계. 전체 설계 계획 문서는 [docs/plan/README.md](docs/plan/README.md)에 작성하며, 설계 kickoff의 브리프는 [docs/briefs/](docs/briefs/)에서 확인합니다.
 
 ## 목표
 
 - **대화 중심 화면:** 왼쪽 대화 목록, 가운데 대화, 아래 입력창으로 이뤄진 채팅형 화면에서 이사와 이야기합니다.
 - **정지 위험 최소화:** 종료된 PM 터미널 자동 재시작, 결정 요청 알림과 즉시 승인, 할당량 소진 시 계정 홈 전환, 여유 메모리에 따른 작업 순서 조정을 앱이 맡습니다.
-- **데스크톱이 본체, 모바일은 원격:** 데스크톱 앱이 Orca와 OMT를 직접 다루고, 모바일 앱은 같은 화면으로 본체에 접속합니다. 화면 코드는 OTA로 갱신합니다.
+- **데스크톱이 본체, 모바일은 원격:** 데스크톱 앱이 OMT 엔진과 어댑터를 통해 백그라운드 프로세스를 직접 다루고, 모바일 앱은 같은 화면으로 본체에 접속합니다. 화면 코드는 OTA로 갱신합니다.
 
 ## 기술 조합
 
@@ -18,7 +18,7 @@
 | 데스크톱 | Tauri |
 | 모바일 | Capacitor, JS 번들 OTA |
 | 연결 | Tailscale + 토큰 인증 |
-| OMT 연동 | `teams-org.mjs`의 JSON 명령과 Orca CLI |
+| OMT 연동 | Node.js 기반 단일 프로세스 및 SQLite 상태 공유 |
 
 ## 라이선스
 
