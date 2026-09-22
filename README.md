@@ -2,7 +2,7 @@
 
 [oh my teams](https://github.com/inho-team/oh-my-teams)(OMT)를 대화형 화면으로 다루는 데스크톱·모바일 앱입니다. 사용자는 채팅 창에서 이사(Director)와 대화하고, 앱은 Orca로 PM과 worker 터미널을 열어 메시지를 전달하며 kickoff가 멈추지 않게 감독합니다.
 
-> 상태: 설계 단계. 설계 문서는 `docs/` 아래에 작성합니다.
+> 상태: 설계 단계. 설계 문서는 `docs/` 아래에 작성하며, 설계 kickoff의 브리프는 [`docs/briefs/`](docs/briefs/)에 있습니다.
 
 ## 목표
 
