@@ -2,8 +2,8 @@
 
 ## 개요 및 요약
 
-legacy-workbench는 Go 기반 오케스트레이터와 PostgreSQL 영속 계층을 바탕으로 총 22개 내부 도메인 모듈과 43개 마이그레이션을 통해 P1부터 P5까지의 핵심 기능 및 Orca 도구 독립 내재화(Browser, Computer, Gate, Automation)를 약 85% 이상 구현 완료한 상태이다.
-전체 Go 코드는 프로덕션 29,977줄 및 테스트 17,998줄 규모이며, Next.js 기반 웹 대시보드(17,080줄)와 연동되어 단일 바이너리 체제로 동작한다.
+legacy-workbench는 Go 기반 오케스트레이터와 PostgreSQL 영속 계층을 바탕으로 총 22개 내부 도메인 모듈과 45개 마이그레이션 항목을 통해 P1부터 P5까지의 핵심 기능 및 Orca 도구 독립 내재화(Browser, Computer, Gate, Automation)를 약 85% 이상 구현 완료한 상태이다.
+전체 Go 코드는 프로덕션 37,299줄 및 테스트 20,205줄 규모이며, Next.js 기반 웹 대시보드(16,632줄)와 연동되어 단일 바이너리 체제로 동작한다.
 반면 P6 분산 노드 원격 WS 프로토콜 및 자동 프로비저닝, Linear 등 외부 SaaS 직접 연동, 모바일 에뮬레이터 도구는 '설계만' 또는 '일부' 상태로 남아 있다.
 핵심 실측 발견으로 agy 컨테이너 격리 환경에서 내장 도구 57개가 권한 설정을 통해 완전 통제됨이 확인되었고, 호스트 macOS 환경에서 CDP 브라우저 및 화면 제어가 네이티브로 완결되어 있음을 검증했다.
 
@@ -15,37 +15,37 @@ legacy-workbench는 Go 기반 오케스트레이터와 PostgreSQL 영속 계층�
 
 | 모듈 | 하는 일 | 구현 상태 | Go 코드 줄 수(테스트 제외) | 테스트 줄 수 | 실측 근거 | 근거 위치 |
 |---|---|---|---|---|---|---|
-| `internal/api` | HTTP REST 엔드포인트와 WebSocket 허브를 열어 조직·직원·태스크·구독·게이트 등 시스템 전반의 조작을 외부 및 웹 UI에 제공한다. | 구현됨 | 4,388 | 1,804 | docs/09 화면 둘(`/audit`, `/worktrees`) 연동 및 WS 허브 실측을 통과했다. | `legacy-workbench/internal/api/server.go:1-50` |
-| `internal/automation` | Orca 내재화 M-16에 따라 `automations` 테이블을 주기적으로 폴링하여 등록된 스케줄 및 `div_rebase` 잡을 비동기 실행한다. | 구현됨 | 502 | 706 | docs/09 M-16 Phase 2에서 자동화 스케줄러가 DB 표를 읽고 실행함을 검증했다. | `legacy-workbench/internal/automation/automation.go:1-35` |
-| `internal/browser` | CDP(Chrome DevTools Protocol) 소켓을 직접 제어하여 DOM 접근성 트리(AXTree) 스냅샷, 좌표 기반 클릭, 키 입력 등 브라우저 자동화를 수행한다. | 구현됨 | 2,279 | 948 | docs/09 M-16 Phase 3에서 브라우저 세로 한 줄 연결 및 SPA 버튼 탐색 휴리스틱을 실측했다. | `legacy-workbench/internal/browser/cdp.go:1-40` |
-| `internal/codex` | OpenAI Codex app-server JSON-RPC 클라이언트를 감싸 프로세스 기동, 세션 수명 주기, 턴 제어 및 승인 요청 콜백을 처리한다. | 일부 | 767 | 0 | docs/09 결정 M-12~M-15에 따라 Chief 전용 통신으로 한정하여 실측했다. | `legacy-workbench/internal/codex/client.go:1-50` |
-| `internal/computer` | macOS Accessibility API와 CoreGraphics 화면 캡처 브리지를 호출하여 활성 창 조회 및 마우스·키보드 조작을 대행한다. | 구현됨 | 661 | 311 | docs/09 M-16 데스크톱 조작에서 `ListApps` 왕복 12초 실측 및 화이트리스트 관문을 확인했다. | `legacy-workbench/internal/computer/computer.go:1-30` |
-| `internal/config` | 오케스트레이터 실행 환경 설정을 읽고, M-5 결정에 따라 비밀 정보는 파일이 아닌 환경에서 주입받아 provider별 TOML을 생성한다. | 구현됨 | 386 | 271 | docs/05 및 docs/09 P1/P2 부팅 시퀀스에서 설정 렌더링을 검증했다. | `legacy-workbench/internal/config/config.go:1-35` |
-| `internal/embed` | Ollama `bge-m3` 등 로컬 임베딩 HTTP 엔드포인트를 직행 호출하여 기억 벡터 검색용 고차원 벡터를 추출한다. | 일부 | 89 | 0 | docs/09 P4 임베드 러너 실측에서 로컬 무비용 임베딩 호출을 확인했다. | `legacy-workbench/internal/embed/embed.go:1-40` |
-| `internal/gate` | 채용·머지·발령·예산 등 인간 개입 지점을 1급 데이터 프리미티브(Gate)로 관리하며 생성·해결·취소 및 WebSocket 알림을 전파한다. | 구현됨 | 244 | 302 | docs/09 M-16 Phase 1에서 단일 `gates` 테이블 기반 통합 승인 관문 진입을 실측했다. | `legacy-workbench/internal/gate/gate.go:1-35` |
-| `internal/git` | 오케스트레이터 권한으로 워크트리 분기, diff 검사, 커밋 검증, lead 판정 후 머지 및 `div_rebase` 조작을 안전하게 대행한다. | 구현됨 | 386 | 439 | docs/09 D-06 닫힘 실측에서 조상 보존 3단계 `div_rebase` 동작을 확인했다. | `legacy-workbench/internal/git/git.go:1-35` |
-| `internal/lego` | 프론트엔드·백엔드·계약의 3축 규칙에 따라 스택별 코드 블록을 조립하고 파일 골격(스캐폴딩)을 자동 생성한다. | 구현됨 | 2,212 | 1,661 | HANDOFF-레고 실측에서 14개 소스 파일과 단위 테스트를 통해 골격 생성을 검증했다. | `legacy-workbench/internal/lego/block/manifest.go:1-35` |
-| `internal/mcp` | 도구 레지스트리를 표준 MCP stdio 서버 프로토콜로 노출하며 Chief Codex 세션용 계급 기반 도구 필터링을 집행한다. | 일부 | 179 | 0 | docs/05 및 docs/08 E안 채택에 따라 로컬 직원을 제외하고 Chief 전용 stdio 어댑터로 축소 적용했다. | `legacy-workbench/internal/mcp/doc.go:1-36` |
-| `internal/media` | FFmpeg 및 ffprobe 서브프로세스를 대신 실행하여 오디오·비디오 메타데이터 분석, 구간 분할, 트랜스코딩, Whisper 전사를 대행한다. | 구현됨 | 526 | 408 | docs/01 및 docs/09 P5 미디어 파이프라인에서 미디어 조작 격리를 확인했다. | `legacy-workbench/internal/media/media.go:1-40` |
-| `internal/node` | node-agent 프로토콜(WS) 통신과 agy CLI 컨테이너 어댑터를 구현하여 프로세스 스폰, 스트리밍 입출력 번역, 턴 실행을 중계한다. | 구현됨 | 1,265 | 1,036 | docs/09 2026-09-10 agy 컨테이너 실행 실측에서 턴 실행 및 스트리밍 변환을 확인했다. | `legacy-workbench/internal/node/agy.go:1-40` |
-| `internal/org` | 조직 도메인(에이전트, 부서, 템플릿, 로스터) 로직을 관장하며 지문 기반 캐싱으로 `AGENTS.md` 프롬프트 문서를 동적 렌더링한다. | 구현됨 | 674 | 408 | docs/09 AGENTS.md 렌더링 실측에서 두 지문 기반 신선도 보장을 확인했다. | `legacy-workbench/internal/org/agentsmd.go:1-35` |
-| `internal/policy` | 순수 함수 기반 L0 정책 엔진으로 셸 명령어 토큰 분석, git/파일 접근 규칙, 샌드박스 경계 침범 여부를 사전 검사한다. | 구현됨 | 1,123 | 906 | docs/07 및 docs/09 셸 브리지 판정 실측에서 worker 권한 강제 불변식을 확인했다. | `legacy-workbench/internal/policy/bridge.go:1-35` |
-| `internal/quota` | DB를 모르는 인메모리 순수 정책 모듈로서 토큰 버킷 알고리즘을 사용해 rpm, 버스트, 호출 간격, 동시 요청 수를 엄격히 제한한다. | 구현됨 | 362 | 335 | docs/16 단계 C 실측에서 폭주 방지 인메모리 속도 한도 집행을 확인했다. | `legacy-workbench/internal/quota/quota.go:1-35` |
-| `internal/schedule` | 외부 라이브러리 없이 순수 Go로 5필드 cron 표현식을 해석하여 정기 이슈(`task_recurrences`)의 다음 실행 시각을 계산한다. | 구현됨 | 450 | 222 | docs/17 정기 이슈 스케줄러 실측에서 순수 시각 연산 및 표현식 파싱을 검증했다. | `legacy-workbench/internal/schedule/cron.go:1-35` |
-| `internal/session` | 에이전트와 스레드 간 세션 생명주기 관리, 턴 기록, 리포트 수집, 리뷰 판정, 에피소딕 기억 압축(Compaction)을 수행한다. | 구현됨 | 2,186 | 1,003 | docs/09 P1/P2 세션 루프 및 기억 압축 실측을 통과했다. | `legacy-workbench/internal/session/tracker.go:1-35` |
-| `internal/store` | PostgreSQL(pgx) 기반 영속 계층으로 조직, 태스크, 기억, 노드, 구독, 게이트, 자동화, 감사 등 전체 테이블의 sqlc 및 수동 CRUD를 담당한다. | 구현됨 | 7,097 | 5,328 | docs/09 001~043 마이그레이션 적용 및 트랜잭션 쿼리 동작을 실측했다. | `legacy-workbench/internal/store/store.go:1-40` |
-| `internal/tools` | MCP 및 CLI가 공통 참조하는 전송 무관 도구 레지스트리(Registry)와 도메인별 툴 핸들러(hr, comm, task, git, browser 등)를 등록한다. | 구현됨 | 3,815 | 1,845 | docs/05 D-15 도구 레지스트리 설계 및 browsertools 15종 등록을 검증했다. | `legacy-workbench/internal/tools/registry.go:1-40` |
-| `internal/toolsock` | 오케스트레이터와 에이전트 간 Unix Domain Socket 기반 IPC 통신을 관리하며 일회용 티켓 인증으로 도구를 격리 실행한다. | 구현됨 | 517 | 255 | HANDOFF-셸-브리지 및 docs/14 실측에서 macOS 104자 소켓 경로 준수를 확인했다. | `legacy-workbench/internal/toolsock/server.go:1-35` |
-| `internal/workspace` | 권위 레포의 `.git` 오염을 방지하기 위해 Git worktree 대신 격리된 로컬 클론(local clone)을 생성하고 관리한다. | 구현됨 | 308 | 353 | docs/07 §3.2 및 docs/09 M-2 격리 실측에서 로컬 클론 생성을 검증했다. | `legacy-workbench/internal/workspace/clone.go:1-35` |
-| `cmd/orchestrator` | 오케스트레이터 메인 진입점으로 REST API 서버, WS 허브, 스케줄러, 백그라운드 워커, `ops` 관리자 CLI를 통합 구동한다. | 구현됨 | 6,865 | 1,783 | docs/09 통합 부팅 및 `workbench ops` 서브커맨드 동작을 실측했다. | `legacy-workbench/cmd/orchestrator/main.go:1-40` |
-| `cmd/node-agent` | 머신당 1개 상주하는 경량 데몬 소스코드로 호스트 RAM 측정 및 app-server 프로세스 모니터링을 담당한다. | 구현됨 | 184 | 0 | docs/01 인프라 설계 및 docs/05 P6 도입 계획에 따라 기본 골격을 구현했다. | `legacy-workbench/cmd/node-agent/main.go:1-30` |
-| `cmd/` (통합) | `cmd/orchestrator`와 `cmd/node-agent` 두 개 바이너리 진입점으로 구성된다. | 구현됨 | 7,049 | 1,783 | docs/05 바이너리 2개 실행 단위 원칙에 부합함을 확인했다. | `legacy-workbench/cmd/orchestrator/main.go:1-40` |
-| `web/` | Next.js App Router 기반 관리 대시보드로 조직, 로스터, 태스크 타임라인, 감사 로그, 워크트리 현황 화면을 제공한다. | 구현됨 | 0 (TS/CSS 등 17,080줄) | 0 | docs/09 `make web-check` 및 `/audit`, `/worktrees` 화면 연동을 확인했다. | `legacy-workbench/web/app/page.tsx:1-40` |
+| `internal/api` | HTTP REST 엔드포인트와 WebSocket 허브를 열어 조직·직원·태스크·구독·게이트 등 시스템 전반의 조작을 외부 및 웹 UI에 제공한다. | 구현됨 | 4,362 | 1,789 | docs/09 화면 둘(`/audit`, `/worktrees`) 연동 및 WS 허브 실측을 통과했다. | `legacy-workbench/internal/api/server.go:1-50` |
+| `internal/automation` | Orca 내재화 M-16에 따라 `automations` 테이블을 주기적으로 폴링하여 등록된 스케줄 및 `div_rebase` 잡을 비동기 실행한다. | 구현됨 | 500 | 704 | docs/09 M-16 Phase 2에서 자동화 스케줄러가 DB 표를 읽고 실행함을 검증했다. | `legacy-workbench/internal/automation/automation.go:1-35` |
+| `internal/browser` | CDP(Chrome DevTools Protocol) 소켓을 직접 제어하여 DOM 접근성 트리(AXTree) 스냅샷, 좌표 기반 클릭, 키 입력 등 브라우저 자동화를 수행한다. | 구현됨 | 2,271 | 946 | docs/09 M-16 Phase 3에서 브라우저 세로 한 줄 연결 및 SPA 버튼 탐색 휴리스틱을 실측했다. | `legacy-workbench/internal/browser/cdp.go:1-40` |
+| `internal/codex` | OpenAI Codex app-server JSON-RPC 클라이언트를 감싸 프로세스 기동, 세션 수명 주기, 턴 제어 및 승인 요청 콜백을 처리한다. | 일부 | 761 | 0 | docs/09 결정 M-12~M-15에 따라 Chief 전용 통신으로 한정하여 실측했다. | `legacy-workbench/internal/codex/client.go:1-50` |
+| `internal/computer` | macOS Accessibility API와 CoreGraphics 화면 캡처 브리지를 호출하여 활성 창 조회 및 마우스·키보드 조작을 대행한다. | 구현됨 | 658 | 309 | docs/09 M-16 데스크톱 조작에서 `ListApps` 왕복 12초 실측 및 화이트리스트 관문을 확인했다. | `legacy-workbench/internal/computer/computer.go:1-30` |
+| `internal/config` | 오케스트레이터 실행 환경 설정을 읽고, M-5 결정에 따라 비밀 정보는 파일이 아닌 환경에서 주입받아 provider별 TOML을 생성한다. | 구현됨 | 384 | 270 | docs/05 및 docs/09 P1/P2 부팅 시퀀스에서 설정 렌더링을 검증했다. | `legacy-workbench/internal/config/config.go:1-35` |
+| `internal/embed` | Ollama `bge-m3` 등 로컬 임베딩 HTTP 엔드포인트를 직행 호출하여 기억 벡터 검색용 고차원 벡터를 추출한다. | 일부 | 88 | 0 | docs/09 P4 임베드 러너 실측에서 로컬 무비용 임베딩 호출을 확인했다. | `legacy-workbench/internal/embed/embed.go:1-40` |
+| `internal/gate` | 채용·머지·발령·예산 등 인간 개입 지점을 1급 데이터 프리미티브(Gate)로 관리하며 생성·해결·취소 및 WebSocket 알림을 전파한다. | 구현됨 | 243 | 301 | docs/09 M-16 Phase 1에서 단일 `gates` 테이블 기반 통합 승인 관문 진입을 실측했다. | `legacy-workbench/internal/gate/gate.go:1-35` |
+| `internal/git` | 오케스트레이터 권한으로 워크트리 분기, diff 검사, 커밋 검증, lead 판정 후 머지 및 `div_rebase` 조작을 안전하게 대행한다. | 구현됨 | 384 | 437 | docs/09 D-06 닫힘 실측에서 조상 보존 3단계 `div_rebase` 동작을 확인했다. | `legacy-workbench/internal/git/git.go:1-35` |
+| `internal/lego` | 프론트엔드·백엔드·계약의 3축 규칙에 따라 스택별 코드 블록을 조립하고 파일 골격(스캐폴딩)을 자동 생성한다. | 구현됨 | 2,203 | 1,655 | HANDOFF-레고 실측에서 14개 소스 파일과 단위 테스트를 통해 골격 생성을 검증했다. | `legacy-workbench/internal/lego/block/manifest.go:1-35` |
+| `internal/mcp` | 도구 레지스트리를 표준 MCP stdio 서버 프로토콜로 노출하며 Chief Codex 세션용 계급 기반 도구 필터링을 집행한다. | 일부 | 177 | 0 | docs/05 및 docs/08 E안 채택에 따라 로컬 직원을 제외하고 Chief 전용 stdio 어댑터로 축소 적용했다. | `legacy-workbench/internal/mcp/doc.go:1-36` |
+| `internal/media` | FFmpeg 및 ffprobe 서브프로세스를 대신 실행하여 오디오·비디오 메타데이터 분석, 구간 분할, 트랜스코딩, Whisper 전사를 대행한다. | 구현됨 | 525 | 405 | docs/01 및 docs/09 P5 미디어 파이프라인에서 미디어 조작 격리를 확인했다. | `legacy-workbench/internal/media/media.go:1-40` |
+| `internal/node` | node-agent 프로토콜(WS) 통신과 agy CLI 컨테이너 어댑터를 구현하여 프로세스 스폰, 스트리밍 입출력 번역, 턴 실행을 중계한다. | 구현됨 | 1,257 | 1,029 | docs/09 2026-09-10 agy 컨테이너 실행 실측에서 턴 실행 및 스트리밍 변환을 확인했다. | `legacy-workbench/internal/node/agy.go:1-40` |
+| `internal/org` | 조직 도메인(에이전트, 부서, 템플릿, 로스터) 로직을 관장하며 지문 기반 캐싱으로 `AGENTS.md` 프롬프트 문서를 동적 렌더링한다. | 구현됨 | 669 | 406 | docs/09 AGENTS.md 렌더링 실측에서 두 지문 기반 신선도 보장을 확인했다. | `legacy-workbench/internal/org/agentsmd.go:1-35` |
+| `internal/policy` | 순수 함수 기반 L0 정책 엔진으로 셸 명령어 토큰 분석, git/파일 접근 규칙, 샌드박스 경계 침범 여부를 사전 검사한다. | 구현됨 | 1,119 | 899 | docs/07 및 docs/09 셸 브리지 판정 실측에서 worker 권한 강제 불변식을 확인했다. | `legacy-workbench/internal/policy/bridge.go:1-35` |
+| `internal/quota` | DB를 모르는 인메모리 순수 정책 모듈로서 토큰 버킷 알고리즘을 사용해 rpm, 버스트, 호출 간격, 동시 요청 수를 엄격히 제한한다. | 구현됨 | 361 | 334 | docs/16 단계 C 실측에서 폭주 방지 인메모리 속도 한도 집행을 확인했다. | `legacy-workbench/internal/quota/quota.go:1-35` |
+| `internal/schedule` | 외부 라이브러리 없이 순수 Go로 5필드 cron 표현식을 해석하여 정기 이슈(`task_recurrences`)의 다음 실행 시각을 계산한다. | 구현됨 | 448 | 220 | docs/17 정기 이슈 스케줄러 실측에서 순수 시각 연산 및 표현식 파싱을 검증했다. | `legacy-workbench/internal/schedule/cron.go:1-35` |
+| `internal/session` | 에이전트와 스레드 간 세션 생명주기 관리, 턴 기록, 리포트 수집, 리뷰 판정, 에피소딕 기억 압축(Compaction)을 수행한다. | 구현됨 | 2,176 | 994 | docs/09 P1/P2 세션 루프 및 기억 압축 실측을 통과했다. | `legacy-workbench/internal/session/tracker.go:1-35` |
+| `internal/store` | PostgreSQL(pgx) 기반 영속 계층으로 조직, 태스크, 기억, 노드, 구독, 게이트, 자동화, 감사 등 전체 테이블의 sqlc 및 수동 CRUD를 담당한다. | 구현됨 | 7,075 | 5,305 | docs/09 001~043 마이그레이션 적용 및 트랜잭션 쿼리 동작을 실측했다. | `legacy-workbench/internal/store/store.go:1-40` |
+| `internal/tools` | MCP 및 CLI가 공통 참조하는 전송 무관 도구 레지스트리(Registry)와 도메인별 툴 핸들러(hr, comm, task, git, browser 등)를 등록한다. | 구현됨 | 3,795 | 1,832 | docs/05 D-15 도구 레지스트리 설계 및 browsertools 15종 등록을 검증했다. | `legacy-workbench/internal/tools/registry.go:1-40` |
+| `internal/toolsock` | 오케스트레이터와 에이전트 간 Unix Domain Socket 기반 IPC 통신을 관리하며 일회용 티켓 인증으로 도구를 격리 실행한다. | 구현됨 | 513 | 252 | HANDOFF-셸-브리지 및 docs/14 실측에서 macOS 104자 소켓 경로 준수를 확인했다. | `legacy-workbench/internal/toolsock/server.go:1-35` |
+| `internal/workspace` | 권위 레포의 `.git` 오염을 방지하기 위해 Git worktree 대신 격리된 로컬 클론(local clone)을 생성하고 관리한다. | 구현됨 | 307 | 350 | docs/07 §3.2 및 docs/09 M-2 격리 실측에서 로컬 클론 생성을 검증했다. | `legacy-workbench/internal/workspace/clone.go:1-35` |
+| `cmd/orchestrator` | 오케스트레이터 메인 진입점으로 REST API 서버, WS 허브, 스케줄러, 백그라운드 워커, `ops` 관리자 CLI를 통합 구동한다. | 구현됨 | 6,842 | 1,768 | docs/09 통합 부팅 및 `workbench ops` 서브커맨드 동작을 실측했다. | `legacy-workbench/cmd/orchestrator/main.go:1-40` |
+| `cmd/node-agent` | 머신당 1개 상주하는 경량 데몬 소스코드로 호스트 RAM 측정 및 app-server 프로세스 모니터링을 담당한다. | 구현됨 | 181 | 0 | docs/01 인프라 설계 및 docs/05 P6 도입 계획에 따라 기본 골격을 구현했다. | `legacy-workbench/cmd/node-agent/main.go:1-30` |
+| `cmd/` (통합) | `cmd/orchestrator`와 `cmd/node-agent` 두 개 바이너리 진입점으로 구성된다. | 구현됨 | 7,023 | 1,768 | docs/05 바이너리 2개 실행 단위 원칙에 부합함을 확인했다. | `legacy-workbench/cmd/orchestrator/main.go:1-40` |
+| `web/` | Next.js App Router 기반 관리 대시보드로 조직, 로스터, 태스크 타임라인, 감사 로그, 워크트리 현황 화면을 제공한다. | 구현됨 | 0 (TS/CSS 등 16,632줄) | 0 | docs/09 `make web-check` 및 `/audit`, `/worktrees` 화면 연동을 확인했다. | `legacy-workbench/web/app/page.tsx:1-40` |
 | `node-agent/` | `cmd/node-agent`에서 빌드된 단일 정적 실행 바이너리(8,962,194 바이트)로 머신 프로비저닝에 사용된다. | 구현됨 | 184 (바이너리 8.9MB) | 0 | workbench-spec.html §FN-090 및 저장소 루트 정적 바이너리 배치를 확인했다. | `legacy-workbench/docs/workbench-spec.html:2061` |
-| `migrations/` | Goose 기반 PostgreSQL DDL 마이그레이션 43개 파일 및 seed 데이터로 전체 테이블 스키마 진화를 관리한다. | 구현됨 | 43개 SQL 파일 | 0 | docs/09 001부터 043까지 마이그레이션 번호 충돌 해결 및 스키마 적용을 실측했다. | `legacy-workbench/migrations/001_init.sql:1-40` |
+| `migrations/` | Goose 기반 PostgreSQL DDL 마이그레이션 43개 파일 및 seed 데이터로 전체 테이블 스키마 진화를 관리한다. | 구현됨 | 45개 항목 (SQL 43개, 기타 2개) | 0 | docs/09 001부터 043까지 마이그레이션 번호 충돌 해결 및 스키마 적용을 실측했다. | `legacy-workbench/migrations/001_init.sql:1-40` |
 
-> **줄 수 산출 방식**: Go 소스코드는 `*.go` 파일 중 `*_test.go`를 제외한 파일들의 행 수를 합산했고, 테스트 줄 수는 `*_test.go` 파일들의 행 수를 합산했다. `web/`은 `node_modules`와 빌드 산출물을 제외한 TypeScript, TSX, CSS, JSON 파일의 총 행 수(17,080줄)를 측정했다.
-> **migrations/ 테이블 범주(43개 파일)**: 조직/계정(001, 008, 009, 022), 정책/보안(002, 040, 041, 042), 스킬/도구(004, 043), 작업/형상(006, 007, 023, 032), 기억(010, 011, 013, 014, 015, 020, 033), 노드(012), 미디어(016, 017, 019), 프롬프트/리뷰(018, 021), 구독/쿼터(024, 028, 029, 031, 034, 036, 038, 039), 협업/이슈(025, 026), 샌드박스(027), 정기작업(030), 내재화(037), 인간개입(035) 등 14개 범주를 포괄한다.
+> **줄 수 산출 방식**: Go 소스코드는 `*.go` 파일 중 `*_test.go`를 제외한 파일들의 행 수를 합산했고, 테스트 줄 수는 `*_test.go` 파일들의 행 수를 합산했다(`find <경로> -type f -name '*.go' -not -name '*_test.go' -exec cat {} + | wc -l` 방식 사용). `web/`은 `node_modules`와 `.next`, `dist` 등 빌드 산출물을 제외한 소스 파일(`*.ts`, `*.tsx`, `*.css`, `*.json`)의 실제 줄 수를 `find web -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' -o -name '*.json' \) | grep -v 'node_modules\|\.next\|dist' | xargs wc -l` 명령으로 세어 16,632줄을 측정했다.
+> **migrations/ 테이블 범주(45개 항목 중 43개 SQL 파일)**: 조직/계정(001, 008, 009, 022), 정책/보안(002, 040, 041, 042), 스킬/도구(004, 043), 작업/형상(006, 007, 023, 032), 기억(010, 011, 013, 014, 015, 020, 033), 노드(012), 미디어(016, 017, 019), 프롬프트/리뷰(018, 021), 구독/쿼터(024, 028, 029, 031, 034, 036, 038, 039), 협업/이슈(025, 026), 샌드박스(027), 정기작업(030), 내재화(037), 인간개입(035) 등 14개 범주를 포괄한다.
 
 ---
 
