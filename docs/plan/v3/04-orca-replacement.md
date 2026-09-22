@@ -8,51 +8,56 @@
 
 | Orca 의존 명령 | 대체 방법 | 재사용 후보 및 근거 위치 | 효율 영향 |
 |---|---|---|---|
-| `orca version` | CLI 바이너리를 직접 검증한다. | `headless.mjs`의 프로바이더 CLI 직접 실행 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:1-50`) | 상태 확인 RPC 지연 0초로 단축 (미측정) |
-| `orca skills get orca-cli` | 런타임 가이드 검증 생략. | `headless.mjs`의 가이드 해시 검증 생략 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:1-50`) | 해시 추출 오버헤드 제거 (미측정) |
-| `orca status --json` | 상태 확인 불필요. CLI 실행 가능 여부만 판단. | 없음 | 사전 점검 RPC 지연 제거 (미측정) |
-| `orca worktree create` | 로컬 작업 디렉터리를 `git worktree add`로 직접 생성. | `local-adapter.mjs`의 로컬 워크트리 생성 (`oh-my-teams/plugins/oh-my-teams/scripts/local-adapter.mjs:120-145`) | 중앙 데몬 병목 제거 (미측정) |
-| `orca worktree show` | 디렉터리 존재 여부와 `.git` 파일 경로 확인. | `local-adapter.mjs`의 로컬 워크트리 경로 확인 (`oh-my-teams/plugins/oh-my-teams/scripts/local-adapter.mjs:150-170`) | 상태 조회 IPC 지연 제거 (미측정) |
-| `orca terminal create` | PTY 또는 stdio를 연결하여 백그라운드 프로세스 직접 스폰. | `headless.mjs`의 백그라운드 프로세스 스폰 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:620-650`) | GUI 렌더링 및 IPC 오버헤드 제거 (미측정) |
-| `orca terminal list` | OMT가 직접 생성한 프로세스 PID와 생존 상태(Liveness) 추적. | `headless-list` 기반 백그라운드 워커 조회 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:520-550`) | 불필요한 전역 터미널 폴링 제거 (미측정) |
-| `orca terminal rename` | 터미널 탭 UI가 없으므로 불필요. 로컬 프로세스 메타데이터 사용. | 없음 | 타이틀 갱신 오버헤드 제거 (미측정) |
-| `orca terminal read` | GUI 화면 버퍼 대신 턴 로그 파일(`turn.log`) 직접 파싱. | `headless-status` 및 로그 파일 기반 관찰 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:430-460`) | 렌더링 메모리 절약, 화면 파싱 비용 제거 (미측정) |
-| `orca terminal wait` | 정규식 화면 폴링 대신 턴 완료 파일 생성/이벤트 대기. | `headless.mjs`의 턴 완료 파일 락 대기 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:670-710`) | 화면 폴링 주기 삭제로 CPU 점유 개선 (미측정) |
-| `orca terminal send` | stdin 파이프 또는 입력 큐 파일로 명령/엔터 전송. | `headless-answer` 기반 stdin 전송 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:480-510`) | 키스트로크 에뮬레이션 오버헤드 제거 (미측정) |
-| `orca terminal close` | 자식 프로세스에 SIGTERM/SIGKILL 전송으로 리소스 정리. | `headless-stop`을 통한 프로세스 종료 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:560-590`) | 호스트 자원 누수 즉시 회수 (미측정) |
-| `orca orchestration task-create` | OMT 자체 workflow task 스키마 객체 직접 인스턴스화. | OMT 자체 workflow task 스키마 사용 (`oh-my-teams/plugins/oh-my-teams/scripts/workflow.mjs:1-50`) | 오케스트레이션 IPC 지연 제거 (미측정) |
-| `orca orchestration dispatch` | OMT 디스패처가 워커 프로세스 직접 실행. | OMT 자체 디스패치 및 headless 실행 (`oh-my-teams/plugins/oh-my-teams/scripts/teams-org.mjs:1450-1490`) | 중앙 디스패치 큐 대기 시간 제거 (미측정) |
-| `orca orchestration task-update` | 메모리의 로컬 워크플로 객체 상태 갱신 및 파일 기록. | OMT 워크플로 저장소의 실패 정산 (`oh-my-teams/plugins/oh-my-teams/scripts/workflow.mjs:800-850`) | 상태 동기화 IPC 지연 제거 (미측정) |
-| `orca orchestration worker-start` | 워커 프로세스를 로컬 환경에서 직접 spawn. | `headless-start` 명령 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:620-660`) | 감독 터미널 생성 비용 및 IPC 지연 제거 (미측정) |
-| `orca orchestration worker-stop` | 감독 worker 종료: OS 프로세스를 직접 종료한다. | `headless-stop` (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:560-590`) | RPC 지연 회피 (미측정) |
-| `orca orchestration worker-abandon` | 비정상 worker 격리: 프로세스 강제 종료 및 격리 처리한다. | `headless-runner.mjs`의 프로세스 타임아웃 강제 회수 (`oh-my-teams/plugins/oh-my-teams/scripts/headless-runner.mjs:115-130`) | RPC 지연 회피 (미측정) |
-| `orca orchestration worker-release` | worker 자원 해제: 종료 즉시 로컬 워크트리 삭제. | OMT 워크플로 정산 및 워크트리 회수 (`oh-my-teams/plugins/oh-my-teams/scripts/workflow.mjs:900-950`) | 워크트리 누수 방지 (미측정) |
-| `orca orchestration check` | 진행/완료 신호 수신: 파일 이벤트를 감시하여 `worker_done` 파싱. | `headless.mjs`의 턴 상태 파일 폴링 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:430-470`) | API 폴링 최소화로 CPU 점유 개선 (미측정) |
-| `orca orchestration worker-read` | 턴 출력 읽기: 턴 로그 파일에서 직접 읽는다. | headless의 `turn.log` 직접 읽기 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:450-470`) | IPC 지연 감소 (미측정) |
-| `orca orchestration worker-list` | PM 생존 확인: OS 프로세스 Liveness 식별. | 없음 | 상태 확인 RPC 지연 제거 (미측정) |
-| `orca skills get orchestration` | [문서·스킬 전용] OMT 프롬프트 내규로 대체. | 없음 | 불필요한 도움말 검색 생략 (미측정) |
-| `orca orchestration run-create` | [문서·스킬 전용] 에이전트 생성 없이 배정 작업 ID 연동. | 없음 | 런타임 생성 절차 간소화 (미측정) |
-| `orca orchestration send` | [문서·스킬 전용] CLI 대신 OMT 통신 인터페이스 직접 호출. | 없음 | CLI 실행 오버헤드 감소 (미측정) |
-| `orca orchestration reply` | [문서·스킬 전용] OMT 통신 인터페이스 사용 회신. | 없음 | CLI 파싱 및 IPC 오버헤드 감소 (미측정) |
-| `orca orchestration ask` | [문서·스킬 전용] 지정 출력 포맷으로 OMT 파서 위임. | 없음 | CLI 오버헤드 없이 신속 질의 (미측정) |
-| `orca terminal show` | [문서·스킬 전용] 프로세스 메타데이터 직접 확인 참조. | 없음 | 정보 조회 IPC 지연 제거 (미측정) |
+| `orca version` | CLI 바이너리를 직접 검증한다. | 새로 작성 (구현 없음) | 미측정 |
+| `orca skills get orca-cli` | 런타임 가이드 검증 생략. | 새로 작성 (구현 없음) | 미측정 |
+| `orca status --json` | 상태 확인 불필요. CLI 실행 가능 여부만 판단. | 새로 작성 (구현 없음) | 미측정 |
+| `orca worktree create` | 로컬 작업 디렉터리를 `git worktree add`로 직접 생성. | `local-adapter.mjs`의 로컬 워크트리 생성 (`oh-my-teams/plugins/oh-my-teams/scripts/local-adapter.mjs:117-150`) | 미측정 |
+| `orca worktree show` | 디렉터리 존재 여부와 `.git` 파일 경로 확인. | `local-adapter.mjs`의 로컬 워크트리 경로 확인 (`oh-my-teams/plugins/oh-my-teams/scripts/local-adapter.mjs:200-227`) | 미측정 |
+| `orca terminal create` | 비대화형 모드(stdio: ignore)로 백그라운드 프로세스 스폰. | `headless.mjs`의 턴 스폰 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:603-650`) | 미측정 |
+| `orca terminal list` | OMT가 직접 생성한 프로세스 PID와 생존 상태 추적. | `headless.mjs`의 백그라운드 워커 조회 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:1016-1025`) | 미측정 |
+| `orca terminal rename` | 터미널 탭 UI가 없으므로 불필요. 메타데이터 사용. | 새로 작성 (구현 없음) | 미측정 |
+| `orca terminal read` | GUI 화면 버퍼 대신 기록된 stream.jsonl, turn.json 파일 파싱. | `headless.mjs`의 턴 기록 읽기 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:714-750`) | 미측정 |
+| `orca terminal wait` | 정규식 화면 폴링 대신 liveness와 exit.json 생성 대기. | `headless.mjs`의 턴 상태 파일 폴링 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:950-970`) | 미측정 |
+| `orca terminal send` | stdin이 아닌, 기존 세션을 이어받는 새 턴 프로세스를 스폰. | `headless.mjs`의 다음 턴 스폰 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:971-994`) | 미측정 |
+| `orca terminal close` | stop.request 파일을 기록하여 runner가 리소스 정리. | `headless.mjs`의 프로세스 종료 요청 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:995-1015`) | 미측정 |
+| `orca orchestration task-create` | 자체 워크플로 task 상태 객체 인스턴스화. | OMT 자체 task 상태 생성 (`oh-my-teams/plugins/oh-my-teams/scripts/workflow.mjs:169-183`) | 미측정 |
+| `orca orchestration dispatch` | 디스패처가 워커 프로세스 직접 실행. | OMT 자체 디스패치 실행 (`oh-my-teams/plugins/oh-my-teams/scripts/teams-org.mjs:878-947`) | 미측정 |
+| `orca orchestration task-update` | 메모리의 로컬 워크플로 객체 상태 갱신. | OMT 워크플로의 task 상태 정산 (`oh-my-teams/plugins/oh-my-teams/scripts/workflow.mjs:1077-1133`) | 미측정 |
+| `orca orchestration worker-start` | 워커 프로세스를 로컬 환경에서 직접 스폰. | `headless.mjs`의 워커 시작 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:666-713`) | 미측정 |
+| `orca orchestration worker-stop` | 감독 worker 종료: stop.request로 안전하게 종료. | `headless.mjs`의 워커 중지 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:995-1015`) | 미측정 |
+| `orca orchestration worker-abandon` | 비정상 worker 격리: 프로세스 트리 강제 종료(taskkill). | `headless-runner.mjs`의 트리 강제 종료 (`oh-my-teams/plugins/oh-my-teams/scripts/headless-runner.mjs:111-135`) | 미측정 |
+| `orca orchestration worker-release` | worker 자원 해제: 워크플로 슬롯 해제. | OMT 워크플로 정산 (`oh-my-teams/plugins/oh-my-teams/scripts/workflow.mjs:1169-1238`) | 미측정 |
+| `orca orchestration check` | 진행/완료 신호 수신: 프로세스 상태 폴링. | `headless.mjs`의 상태 폴링 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:950-970`) | 미측정 |
+| `orca orchestration worker-read` | 턴 출력 읽기: stream.jsonl 파일에서 턴 정보 읽기. | headless의 턴 읽기 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:714-750`) | 미측정 |
+| `orca orchestration worker-list` | PM 생존 확인. | 새로 작성 (구현 없음) | 미측정 |
+| `orca skills get orchestration` | [문서·스킬 전용] OMT 프롬프트 내규로 대체. | 새로 작성 (구현 없음) | 미측정 |
+| `orca orchestration run-create` | [문서·스킬 전용] 배정 작업 ID 연동. | 새로 작성 (구현 없음) | 미측정 |
+| `orca orchestration send` | [문서·스킬 전용] OMT 통신 인터페이스 직접 호출. | 새로 작성 (구현 없음) | 미측정 |
+| `orca orchestration reply` | [문서·스킬 전용] OMT 통신 인터페이스 사용 회신. | 새로 작성 (구현 없음) | 미측정 |
+| `orca orchestration ask` | [문서·스킬 전용] 지정 출력 포맷으로 OMT 파서 위임. | 새로 작성 (구현 없음) | 미측정 |
+| `orca terminal show` | [문서·스킬 전용] 프로세스 메타데이터 직접 확인 참조. | 새로 작성 (구현 없음) | 미측정 |
 
 ## 대화형 TUI 역할의 PTY 수명 관리와 화면 읽기
 
-Claude Code나 Codex처럼 자체 대화형 터미널(TUI)을 가지는 역할을 구동하기 위해, GUI 터미널 렌더링에 의존하던 기존 Orca의 방식을 대체하여 백그라운드에서 직접 프로세스를 관리하고 입출력을 제어한다. 이를 어댑터 인터페이스 연산과 대응하면 다음과 같다.
+v3는 대화형 TUI를 OMT headless처럼 완전히 비대화형 모드로 대체하여 PTY 없이 실행하는 것으로 결정한다. GUI 터미널 렌더링과 PTY에 의존하던 기존 Orca의 방식을 버리고, 백그라운드 프로세스를 파일 시스템과 상태 폴링으로 관리한다.
 
-1. **띄우기 (`spawnWorker`)**: TUI 프로세스를 GUI 없이 백그라운드로 스폰하되, `stdio` 기반 통신을 위해 PTY를 우회하여 파이프로 연결한다.
-   - **재사용 후보**: `headless.mjs`의 직접 스폰 방식 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:620-650`).
-2. **입력 보내기 (`sendTurn`)**: 터미널 키스트로크를 에뮬레이션하지 않고, 프로세스의 `stdin` 파이프로 명령어 문자열과 개행문자를 직접 주입한다.
-   - **재사용 후보**: `headless.mjs`의 stdin 전송 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:480-510`).
-3. **화면 읽기 (`readOutput`)**: 화면 버퍼 폴링과 정규식 매칭을 버리고, 프로세스가 출력하는 stdout 스트림을 가로채거나 턴 단위 로그 파일(`turn.log`)에서 직접 읽어온다.
-   - **재사용 후보**: `headless.mjs`의 로그 파일 직접 읽기 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:450-470`).
-4. **준비 및 완료 판정 (`checkAgentReady`, `waitCompletion`)**: 화면의 유휴(idle) 배너 정규식을 폴링하는 방식은 비효율적이므로, 턴 완료 알림 파일 생성 이벤트(file lock)를 대기하여 판정한다.
-   - **재사용 후보**: `headless.mjs`의 턴 완료 파일 락 대기 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:670-710`).
-5. **닫기 (`stopWorker`)**: 터미널 GUI 탭을 닫는 대신 워커 자식 프로세스에 SIGTERM/SIGKILL 시그널을 보내 리소스를 즉시 해제한다.
-   - **재사용 후보**: `headless-stop`의 자식 프로세스 종료 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:560-590`).
+1. **띄우기 (`spawnWorker`)**: TUI 프로세스를 GUI나 PTY 없이 백그라운드로 스폰하되, 통신을 끊기 위해 `stdio: 'ignore'`로 강제 실행한다.
+   - **재사용 후보**: `headless.mjs`의 `launchTurn` 스폰 방식 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:603-650`).
+2. **입력 보내기 (`sendTurn`)**: 터미널 키스트로크나 stdin 파이프를 통하지 않는다. 이전 세션을 이어받는 새로운 비대화형 턴 프로세스를 다시 스폰하여 입력을 전달한다.
+   - **재사용 후보**: `headless.mjs`의 `answerHeadless`를 통한 새 턴 시작 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:971-994`).
+3. **화면 및 출력 읽기 (`readOutput`)**: 화면 버퍼나 stdout을 직접 읽지 않는다. 턴이 기록한 파일(`stream.jsonl`, `turn.json`)을 파싱하여 출력을 확인한다.
+   - **재사용 후보**: `headless.mjs`의 `readTurn` 파일 읽기 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:714-750`).
+4. **준비 및 완료 판정 (`checkAgentReady`, `waitCompletion`)**: 화면 유휴 배너 정규식이나 파일 락 이벤트 대기 방식이 아니라, `exit.json` 파일 생성 여부와 프로세스 생존(Liveness)을 폴링(polling)하여 판정한다.
+   - **재사용 후보**: `headless.mjs`의 `waitHeadless` 상태 폴링 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:950-970`).
+5. **닫기 (`stopWorker`)**: 터미널 탭을 닫거나 SIGTERM을 직접 보내는 대신, `stop.request` 파일을 기록하여 백그라운드 러너가 스스로 종료하도록 유도한다.
+   - **재사용 후보**: `headless.mjs`의 `stopHeadless` 종료 요청 파일 생성 (`oh-my-teams/plugins/oh-my-teams/scripts/headless.mjs:995-1015`).
 
-이러한 수명 관리 방식은 불필요한 GUI 렌더링, 키스트로크 에뮬레이션, IPC 오버헤드를 모두 제거하여 프로세스 자원 효율을 극대화한다.
+### 비대화형 모드로 대체 시 잃는 것
+- 대화 중 즉각적인 질문 응답 및 키스트로크 입력 (입력을 주려면 턴이 끝나길 기다렸다가 새 턴으로 이어서 실행해야 함).
+- 실시간 화면 관찰 및 진행률 렌더링.
+- 터미널 크기나 인터럽트 시그널(Ctrl+C) 등 TUI 전용 상호작용.
+
+이러한 수명 관리 방식은 불필요한 GUI 렌더링과 IPC 오버헤드를 완전히 제거하여 프로세스 자원 효율을 극대화한다.
 
 ## 교체 가능한 실행 계층 어댑터 인터페이스
 
