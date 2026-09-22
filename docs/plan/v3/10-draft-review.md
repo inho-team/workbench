@@ -10,7 +10,7 @@
 | docs/supervision.md | 반영함 ([08-phases.md](08-phases.md)의 Phase 2: Orca 없는 첫 킥오프 완주 (OMT 2.x) 절) | 초안 8028b89 docs/supervision.md |
 | docs/account-isolation.md | 반영함 ([05-target-architecture.md](05-target-architecture.md)의 계정 격리 실행기 절) | 초안 8028b89 docs/account-isolation.md |
 | docs/roadmap.md | 반영함 ([08-phases.md](08-phases.md)의 단계 계획과 OMT 버전 이정표 절) | 초안 8028b89 docs/roadmap.md |
-| docs/risks.md | 반영하지 않음(이유: 08 문서의 Phase 2 위험 대응에 서술한 바와 같이, 데스크톱 로컬 앱 구조에서는 스토어 심사나 중앙 차단 위험이 없기 때문이다) | 초안 8028b89 docs/risks.md |
+| docs/risks.md | 반영함 ([08-phases.md](08-phases.md)의 Phase 2: Orca 없는 첫 킥오프 완주 (OMT 2.x) 절과 Phase 3: Orca 어댑터 제거와 OMT 3.0 (OMT 3.0) 절, [05-target-architecture.md](05-target-architecture.md)의 계정 격리 실행기 절과 화면 (구조 확정 사항) 절) | 초안 8028b89 docs/risks.md |
 | docs/decisions/0001-react.md | 반영함 ([05-target-architecture.md](05-target-architecture.md)의 화면 (구조 확정 사항) 절) | 초안 8028b89 docs/decisions/0001-react.md |
 | docs/decisions/0002-tauri.md | 반영함 ([05-target-architecture.md](05-target-architecture.md)의 화면 (구조 확정 사항) 절) | 초안 8028b89 docs/decisions/0002-tauri.md |
 | docs/decisions/0003-capacitor-js-ota.md | 반영함 ([05-target-architecture.md](05-target-architecture.md)의 화면 (구조 확정 사항) 절) | 초안 8028b89 docs/decisions/0003-capacitor-js-ota.md |

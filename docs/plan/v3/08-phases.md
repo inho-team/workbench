@@ -22,7 +22,7 @@
 - 담당 저장소: workbench
 - 전환 중 운영 보장: 신규 킥오프만 WorkbenchAdapter를 사용하도록 플래그를 두며, 기존 킥오프는 영향을 받지 않는다.
 - 효율 목표 달성: 이 단계에서 '유휴 메모리 100MB 이하', '에이전트당 추가 메모리 50MB 이하', '자원 부족 멈춤 0회' 측정 및 달성을 확인한다 ([06-efficiency-budget.md](06-efficiency-budget.md)).
-- 위험 대응: `docs/supervision.md`의 놓친 결정 요청, 메모리·할당량 고갈 시 대응은 이 단계의 백그라운드 런타임 제어에서 모니터링 기능으로 반영한다. 정지 위험 대응(약관 위반, 보안 노출, 스토어 정책 등)은 반영하지 않는다(이유: 데스크톱/로컬 앱 구조에서는 플랫폼 스토어 심사나 중앙 차단 위험이 없기 때문이다).
+- 위험 대응: `docs/supervision.md`의 놓친 결정 요청, 메모리·할당량 고갈 시 대응은 이 단계의 백그라운드 런타임 제어에서 모니터링 기능으로 반영한다. 다중 계정의 서비스 약관 위반 위험은 UI 경고 노출로 다룬다. Windows와 macOS 환경 차이 위험은 크로스 플랫폼 경로 정규화로 다룬다. 컨테이너 런타임 라이선스와 메모리 비용 위험은 [05-target-architecture.md](05-target-architecture.md)의 계정 격리 실행기 절 결정을 따른다.
 
 ## Phase 3: Orca 어댑터 제거와 OMT 3.0 (OMT 3.0)
 - 범위: OMT 코드베이스에서 OrcaAdapter 코드 제거, 모바일 접속 및 Tailscale 인증 릴리스. 이식/재작성 대상 기능 중 `internal/browser`를 구현한다.
@@ -32,3 +32,4 @@
 - 담당 저장소: oh-my-teams, workbench
 - 전환 중 운영 보장: Phase 2의 충분한 검증 후 3.0 릴리스로 전환하여 공백을 방지한다.
 - 효율 목표 달성: 이 단계에서 '턴 시작 지연 500ms 이하', '의사 신호 전달 지연 100ms 이하' 달성을 검증한다 ([06-efficiency-budget.md](06-efficiency-budget.md)).
+- 위험 대응: 원격 접속 보안 위험(접속 토큰 보호 및 권한)과 모바일 앱 OTA 정책 위험은 [05-target-architecture.md](05-target-architecture.md)의 화면 (구조 확정 사항) 절 결정을 따른다.
