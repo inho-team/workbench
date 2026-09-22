@@ -20,6 +20,24 @@
 | 연결 | Tailscale + 토큰 인증 |
 | OMT 연동 | `teams-org.mjs`의 JSON 명령과 Orca CLI |
 
+## 설계 문서
+
+- [아키텍처](docs/architecture.md)
+- [감독과 정지 위험 대응](docs/supervision.md)
+- [계정 격리 실행기 설계](docs/account-isolation.md)
+- [로드맵](docs/roadmap.md)
+- [위험과 제약](docs/risks.md)
+- [OMT 연동 계약](docs/omt-contract.md)
+- [디자인 시스템](docs/design-system.md)
+
+**기술 선택 기록 (ADR):**
+- [0001 React](docs/decisions/0001-react.md)
+- [0002 Tauri](docs/decisions/0002-tauri.md)
+- [0003 Capacitor와 JS 번들 OTA](docs/decisions/0003-capacitor-js-ota.md)
+- [0004 Tailscale과 토큰 인증](docs/decisions/0004-tailscale-token-auth.md)
+- [0005 이사 세션 실행 방식](docs/decisions/0005-director-session.md)
+- [0006 계정 격리 방식](docs/decisions/0006-account-isolation.md)
+
 ## 라이선스
 
 MIT
